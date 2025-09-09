@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { FormField } from '@/types';
 import AppButton from '@/components/UI/AppButton.vue';
+import { defineAsyncComponent } from 'vue';
 
 const props = defineProps<{
   fields: FormField[];
@@ -9,6 +10,17 @@ const props = defineProps<{
 const emit = defineEmits(['save', 'cancel']);
 
 const localModel = defineModel<Record<string, any>>({ required: true });
+
+const fieldComponents = {
+  input: defineAsyncComponent(() => import('@/components/form-fields/InputFormField.vue')),
+  textarea: defineAsyncComponent(() => import('@/components/form-fields/TextareaFormField.vue')),
+  select: defineAsyncComponent(() => import('@/components/form-fields/SelectFormField.vue')),
+  checkbox: defineAsyncComponent(() => import('@/components/form-fields/CheckboxFormField.vue')),
+};
+
+const resolveFieldComponent = (type: string) => {
+  return fieldComponents[type as keyof typeof fieldComponents] || null;
+};
 
 const onSave = () => {
   emit('save', localModel.value);
@@ -30,46 +42,12 @@ const onCancel = () => {
       <slot :name="field.name" :field="field" :model="localModel">
         <label :for="field.name">{{ field.label }}</label>
 
-        <input
-          v-if="field.type === 'input'"
-          :id="field.name"
+        <component
+          :is="resolveFieldComponent(field.type)"
+          v-if="resolveFieldComponent(field.type)"
+          :field="field"
           v-model="localModel[field.name]"
-          v-bind="field.attributes"
-          :placeholder="field.placeholder"
         />
-
-        <textarea
-          v-if="field.type === 'textarea'"
-          :id="field.name"
-          v-model="localModel[field.name]"
-          :placeholder="field.placeholder"
-          v-bind="field.attributes"
-        ></textarea>
-
-        <select
-          v-if="field.type === 'select'"
-          :id="field.name"
-          v-model="localModel[field.name]"
-          v-bind="field.attributes"
-        >
-          <option v-if="field.placeholder" disabled value="">{{ field.placeholder }}</option>
-          <option
-            v-for="option in field.options"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </option>
-        </select>
-
-        <div v-if="field.type === 'checkbox'" class="checkbox-wrapper">
-          <input
-            type="checkbox"
-            :id="field.name"
-            v-model="localModel[field.name]"
-            v-bind="field.attributes"
-          />
-        </div>
       </slot>
     </div>
 
