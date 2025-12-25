@@ -110,9 +110,9 @@ const handleCancel = () => {
   .custom-input {
     border: 2px dashed var(--info);
     padding: 0.5rem;
+    margin: 0 10px;
   }
   small {
-    margin-top: 4px;
     color: var(--info);
     font-weight: bold;
   }
